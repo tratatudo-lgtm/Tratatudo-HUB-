@@ -2,12 +2,29 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import axios from "axios";
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
-
 export default async function handler(req: any, res: any) {
+  // 1. Defensive Logs & Env Var Checks
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const EVO_URL = process.env.EVO_URL;
+  const EVO_KEY = process.env.EVO_KEY;
+  const EVO_INSTANCE = process.env.EVO_INSTANCE_DEFAULT || "TrataTudo bot";
+
+  console.log("Checking Environment Variables...");
+  const missingVars = [];
+  if (!SUPABASE_URL) missingVars.push("SUPABASE_URL");
+  if (!SUPABASE_SERVICE_ROLE_KEY) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+  if (!EVO_URL) missingVars.push("EVO_URL");
+  if (!EVO_KEY) missingVars.push("EVO_KEY");
+
+  if (missingVars.length > 0) {
+    console.error("Missing Environment Variables:", missingVars.join(", "));
+    return res.status(500).json({ 
+      error: "Configuração do servidor incompleta.", 
+      details: `Missing: ${missingVars.join(", ")}` 
+    });
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -19,6 +36,9 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // Initialize Supabase inside handler to ensure env vars are present
+    const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
     // 1. Check if client exists
     const { data: client, error: clientError } = await supabaseAdmin
       .from("clients")
@@ -27,6 +47,7 @@ export default async function handler(req: any, res: any) {
       .single();
 
     if (clientError || !client) {
+      console.log(`Client not found for number: ${phone_e164}`);
       return res.status(404).json({ error: "Não foi possível validar o acesso com este número. Contacta o suporte." });
     }
 
@@ -65,36 +86,44 @@ export default async function handler(req: any, res: any) {
         phone_e164,
         code_hash: codeHash,
         expires_at: expiresAt.toISOString(),
-        ip_address: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        ip_address: req.headers["x-forwarded-for"] || req.connection?.remoteAddress || "0.0.0.0",
         user_agent: req.headers["user-agent"],
       });
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error("Supabase Insert Error:", insertError);
+      throw new Error("Erro ao guardar código de verificação.");
+    }
 
     // 6. Send via Evolution API
-    const EVO_URL = process.env.EVO_URL;
-    const EVO_KEY = process.env.EVO_KEY;
-    const EVO_INSTANCE = process.env.EVO_INSTANCE_DEFAULT || "TrataTudo bot";
-
     const cleanNumber = phone_e164.replace("+", "");
-    await axios.post(
-      `${EVO_URL}/message/sendText/${EVO_INSTANCE}`,
-      {
-        number: cleanNumber,
-        text: `🔐 Código de acesso ao Hub TrataTudo: ${otp}\nVálido por 5 minutos.\nSe não foste tu, ignora esta mensagem.`,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          apikey: EVO_KEY,
+    console.log(`Sending WhatsApp message to ${cleanNumber} via ${EVO_URL}`);
+    
+    try {
+      await axios.post(
+        `${EVO_URL}/message/sendText/${EVO_INSTANCE}`,
+        {
+          number: cleanNumber,
+          text: `🔐 Código de acesso ao Hub TrataTudo: ${otp}\nVálido por 5 minutos.\nSe não foste tu, ignora esta mensagem.`,
         },
-        timeout: 10000,
-      }
-    );
+        {
+          headers: {
+            "Content-Type": "application/json",
+            apikey: EVO_KEY,
+          },
+          timeout: 15000,
+        }
+      );
+    } catch (evoError: any) {
+      console.error("Evolution API Error Details:", evoError.response?.data || evoError.message);
+      throw new Error("Falha ao enviar mensagem de WhatsApp.");
+    }
 
     return res.status(200).json({ ok: true, message: "Código enviado com sucesso." });
   } catch (error: any) {
-    console.error("Request code error:", error);
-    return res.status(500).json({ error: "Não foi possível enviar o código. Tenta novamente." });
+    console.error("Request code error:", error.message);
+    return res.status(500).json({ 
+      error: error.message || "Não foi possível enviar o código. Tenta novamente." 
+    });
   }
 }
