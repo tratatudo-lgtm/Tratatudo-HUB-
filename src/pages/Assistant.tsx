@@ -3,6 +3,8 @@ import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import { askAssistant } from '../lib/ai';
+import { useAuth } from '../hooks/useAuth';
+import { supabase, Ticket } from '../lib/supabase';
 
 type Message = {
   id: string;
@@ -12,17 +14,34 @@ type Message = {
 };
 
 export default function Assistant() {
+  const { client } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o seu Assistente IA TrataTudo. Como posso ajudar hoje? Posso dar informações sobre os seus pedidos, ajudar a interpretar reclamações ou sugerir os próximos passos.',
+      content: `Olá, ${client?.name || 'Cliente'}! Sou o seu Assistente IA TrataTudo. Como posso ajudar hoje? Posso dar informações sobre os seus pedidos, ajudar a interpretar reclamações ou sugerir os próximos passos.`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!client?.id) return;
+
+    const fetchTickets = async () => {
+      const { data } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('client_id', client.id);
+      
+      if (data) setTickets(data as Ticket[]);
+    };
+
+    fetchTickets();
+  }, [client?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,13 +66,19 @@ export default function Assistant() {
     setInput('');
     setIsLoading(true);
 
-    // Contexto simulado (em produção viria do Supabase)
+    // Contexto real do cliente
     const context = {
-      client_name: "Cliente TrataTudo",
-      active_tickets: 12,
-      recent_tickets: [
-        { code: "TT-2024-001", status: "aberto", category: "Iluminação" }
-      ]
+      client_name: client?.name || "Cliente TrataTudo",
+      client_phone: client?.whatsapp_number,
+      active_tickets_count: tickets.filter(t => t.status !== 'resolvido' && t.status !== 'fechado').length,
+      tickets: tickets.map(t => ({
+        code: t.tracking_code,
+        status: t.status,
+        category: t.category,
+        urgency: t.urgency,
+        description: t.description,
+        created_at: t.created_at
+      }))
     };
 
     const response = await askAssistant(input, context);

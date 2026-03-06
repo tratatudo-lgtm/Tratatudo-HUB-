@@ -1,62 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TicketTable } from '../components/TicketTable';
-import { Ticket } from '../lib/supabase';
-import { Search, Filter, Plus, Download } from 'lucide-react';
-
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    client_id: 'c1',
-    tracking_code: 'TT-2024-001',
-    type: 'reclamação',
-    category: 'Iluminação Pública',
-    status: 'aberto',
-    urgency: 'alta',
-    created_at: new Date().toISOString(),
-    description: 'Poste de luz fundido na Rua das Flores, dificultando a visibilidade noturna.',
-    location: 'Lisboa, Portugal'
-  },
-  {
-    id: '2',
-    client_id: 'c1',
-    tracking_code: 'TT-2024-002',
-    type: 'pedido',
-    category: 'Limpeza Urbana',
-    status: 'em_progresso',
-    urgency: 'média',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    description: 'Acumulação de resíduos junto aos ecopontos da Praça Central.',
-    location: 'Porto, Portugal'
-  },
-  {
-    id: '3',
-    client_id: 'c1',
-    tracking_code: 'TT-2024-003',
-    type: 'pedido',
-    category: 'Manutenção de Vias',
-    status: 'resolvido',
-    urgency: 'baixa',
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-    description: 'Pintura de passadeira apagada junto à escola primária.',
-    location: 'Coimbra, Portugal'
-  },
-  {
-    id: '4',
-    client_id: 'c1',
-    tracking_code: 'TT-2024-004',
-    type: 'reclamação',
-    category: 'Espaços Verdes',
-    status: 'aberto',
-    urgency: 'baixa',
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-    description: 'Necessidade de poda de árvores no Parque Infantil.',
-    location: 'Braga, Portugal'
-  }
-];
+import { supabase, Ticket } from '../lib/supabase';
+import { Search, Filter, Plus, Download, Loader2 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Tickets() {
-  const [tickets] = useState<Ticket[]>(mockTickets);
+  const { client } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    if (!client?.id) return;
+
+    const fetchTickets = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('client_id', client.id)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setTickets(data as Ticket[]);
+      }
+      setLoading(false);
+    };
+
+    fetchTickets();
+  }, [client?.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   const filteredTickets = tickets.filter(t => 
     t.tracking_code.toLowerCase().includes(searchTerm.toLowerCase()) ||

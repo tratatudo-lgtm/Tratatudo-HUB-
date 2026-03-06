@@ -11,6 +11,8 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -24,6 +26,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   return (
     <aside className="w-full border-r border-zinc-200 bg-white flex flex-col h-full overflow-y-auto">
       <div className="p-6">
@@ -65,7 +75,10 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       <div className="mt-auto p-6 border-t border-zinc-100">
-        <button className="flex items-center gap-3 px-3 py-2 w-full text-sm font-medium text-zinc-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+        <button 
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-3 py-2 w-full text-sm font-medium text-zinc-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+        >
           <LogOut className="w-4 h-4" />
           Sair
         </button>

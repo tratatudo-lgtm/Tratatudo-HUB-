@@ -1,42 +1,63 @@
-import React, { useState } from 'react';
-import { WAMessage } from '../lib/supabase';
+import React, { useState, useEffect } from 'react';
+import { supabase, WAMessage } from '../lib/supabase';
 import { formatDate, cn } from '../lib/utils';
-import { Smartphone, Search, Filter, MoreVertical, CheckCheck, X } from 'lucide-react';
-
-const mockMessages: WAMessage[] = [
-  {
-    id: '1',
-    client_id: 'c1',
-    direction: 'inbound',
-    message: 'Olá, gostaria de reportar um problema com a iluminação na minha rua.',
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: '2',
-    client_id: 'c1',
-    direction: 'outbound',
-    message: 'Olá! Sou o assistente TrataTudo. Lamento ouvir isso. Pode indicar-me a rua e uma breve descrição do problema?',
-    created_at: new Date(Date.now() - 3600000 * 1.9).toISOString(),
-  },
-  {
-    id: '3',
-    client_id: 'c1',
-    direction: 'inbound',
-    message: 'É na Rua das Flores, o poste em frente ao número 42 está apagado.',
-    created_at: new Date(Date.now() - 3600000 * 1.8).toISOString(),
-  },
-  {
-    id: '4',
-    client_id: 'c1',
-    direction: 'outbound',
-    message: 'Obrigado. Registado com o código TT-2024-001. Pode acompanhar o estado no seu Hub do Cliente.',
-    created_at: new Date(Date.now() - 3600000 * 1.7).toISOString(),
-  }
-];
+import { Smartphone, Search, Filter, MoreVertical, CheckCheck, X, Loader2 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Messages() {
-  const [messages] = useState<WAMessage[]>(mockMessages);
+  const { client } = useAuth();
+  const [messages, setMessages] = useState<WAMessage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showChatList, setShowChatList] = useState(false);
+
+  useEffect(() => {
+    if (!client?.id) return;
+
+    const fetchMessages = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('wa_messages')
+        .select('*')
+        .eq('client_id', client.id)
+        .order('created_at', { ascending: true });
+
+      if (!error && data) {
+        setMessages(data as WAMessage[]);
+      }
+      setLoading(false);
+    };
+
+    fetchMessages();
+
+    // Realtime subscription for new messages
+    const channel = supabase
+      .channel('realtime-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'wa_messages',
+          filter: `client_id=eq.${client.id}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as WAMessage]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [client?.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-2rem)] m-2 md:m-4 bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">

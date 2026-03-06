@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, Ticket, WAMessage } from '../lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export type NotificationType = 'ticket_new' | 'ticket_status' | 'message_new';
 
@@ -15,11 +16,9 @@ export interface AppNotification {
   metadata?: any;
 }
 
-// Simulated client ID for now as we are using mock auth
-const CURRENT_CLIENT_ID = 'c1';
-
 export function useNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const { client } = useAuth();
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const addNotification = useCallback((notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
@@ -51,6 +50,8 @@ export function useNotifications() {
   };
 
   useEffect(() => {
+    if (!client?.id) return;
+
     // 1. Listen for Ticket changes
     const ticketChannel = supabase
       .channel('ticket-changes')
@@ -60,7 +61,7 @@ export function useNotifications() {
           event: '*',
           schema: 'public',
           table: 'tickets',
-          filter: `client_id=eq.${CURRENT_CLIENT_ID}`,
+          filter: `client_id=eq.${client.id}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -96,7 +97,7 @@ export function useNotifications() {
           event: 'INSERT',
           schema: 'public',
           table: 'wa_messages',
-          filter: `client_id=eq.${CURRENT_CLIENT_ID}`,
+          filter: `client_id=eq.${client.id}`,
         },
         (payload) => {
           const msg = payload.new as WAMessage;
@@ -116,7 +117,7 @@ export function useNotifications() {
       supabase.removeChannel(ticketChannel);
       supabase.removeChannel(messageChannel);
     };
-  }, [addNotification]);
+  }, [addNotification, client?.id]);
 
   return {
     notifications,

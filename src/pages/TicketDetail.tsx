@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -8,9 +8,12 @@ import {
   CheckCircle2, 
   MessageSquare,
   History,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { formatDate, cn } from '../lib/utils';
+import { supabase, Ticket } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 
 const statusMap = {
   aberto: { label: 'Aberto', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: AlertCircle },
@@ -22,22 +25,54 @@ const statusMap = {
 export default function TicketDetail() {
   const { code } = useParams();
   const navigate = useNavigate();
+  const { client } = useAuth();
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for detail
-  const ticket = {
-    tracking_code: code,
-    type: 'reclamação',
-    category: 'Iluminação Pública',
-    status: 'aberto',
-    urgency: 'alta',
-    created_at: new Date().toISOString(),
-    description: 'Poste de luz fundido na Rua das Flores, dificultando a visibilidade noturna. O problema persiste há 3 dias e causa insegurança aos moradores.',
-    location: 'Rua das Flores, nº 42, 1200-123 Lisboa',
-    history: [
-      { date: new Date().toISOString(), status: 'aberto', message: 'Pedido criado via WhatsApp Bot.' },
-      { date: new Date(Date.now() - 3600000).toISOString(), status: 'aberto', message: 'Triagem automática concluída.' },
-    ]
-  };
+  useEffect(() => {
+    if (!code || !client?.id) return;
+
+    const fetchTicket = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('tracking_code', code)
+        .eq('client_id', client.id)
+        .single();
+
+      if (!error && data) {
+        setTicket(data as Ticket);
+      }
+      setLoading(false);
+    };
+
+    fetchTicket();
+  }, [code, client?.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  if (!ticket) {
+    return (
+      <div className="p-8 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-zinc-900">Pedido não encontrado</h2>
+        <p className="text-zinc-500 mt-2">O pedido #{code} não existe ou não tem permissão para o ver.</p>
+        <button 
+          onClick={() => navigate('/pedidos')}
+          className="mt-6 text-emerald-600 font-bold hover:underline"
+        >
+          Voltar aos pedidos
+        </button>
+      </div>
+    );
+  }
 
   const status = statusMap[ticket.status as keyof typeof statusMap];
   const StatusIcon = status.icon;
@@ -100,20 +135,18 @@ export default function TicketDetail() {
               Histórico do Processo
             </h2>
             <div className="space-y-4 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100">
-              {ticket.history.map((item, idx) => (
-                <div key={idx} className="relative pl-10">
-                  <div className="absolute left-0 top-1.5 w-9 h-9 bg-white border-2 border-zinc-100 rounded-full flex items-center justify-center z-10">
-                    <div className="w-2 h-2 bg-zinc-400 rounded-full" />
-                  </div>
-                  <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                      <span className="text-xs font-bold text-zinc-900">Estado: {statusMap[item.status as keyof typeof statusMap].label}</span>
-                      <span className="text-[10px] text-zinc-400 font-medium">{formatDate(item.date)}</span>
-                    </div>
-                    <p className="text-sm text-zinc-600">{item.message}</p>
-                  </div>
+              <div className="relative pl-10">
+                <div className="absolute left-0 top-1.5 w-9 h-9 bg-white border-2 border-zinc-100 rounded-full flex items-center justify-center z-10">
+                  <div className="w-2 h-2 bg-zinc-400 rounded-full" />
                 </div>
-              ))}
+                <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <span className="text-xs font-bold text-zinc-900">Estado: {statusMap[ticket.status as keyof typeof statusMap].label}</span>
+                    <span className="text-[10px] text-zinc-400 font-medium">{formatDate(ticket.created_at)}</span>
+                  </div>
+                  <p className="text-sm text-zinc-600">Pedido registado no sistema.</p>
+                </div>
+              </div>
             </div>
           </section>
         </div>
