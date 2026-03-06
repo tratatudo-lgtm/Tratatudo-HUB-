@@ -17,6 +17,7 @@ export type Client = {
   phone: string;
   email: string;
   whatsapp_number: string;
+  phone_e164?: string;
   status: string;
 };
 

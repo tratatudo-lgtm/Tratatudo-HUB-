@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, ArrowRight, Loader2, Smartphone, Key, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import PhoneInput from 'react-phone-number-input';
+import { normalizeToE164 } from '../lib/phone';
+import 'react-phone-number-input/style.css';
 
 export default function Login() {
   const [method, setMethod] = useState<'email' | 'phone'>('phone');
@@ -11,13 +14,26 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'identifier' | 'otp'>('identifier');
   const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState<any>('PT');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Try to detect country from browser locale
+    const locale = window.navigator.language;
+    if (locale && locale.includes('-')) {
+      const detectedCountry = locale.split('-')[1].toUpperCase();
+      if (detectedCountry.length === 2) {
+        setCountry(detectedCountry);
+      }
+    }
+  }, []);
+
   const validateClient = async (id: string, type: 'email' | 'phone') => {
+    const normalizedId = type === 'phone' ? normalizeToE164(id, country) : id;
     const { data, error } = await supabase
       .from('clients')
       .select('id')
-      .eq(type === 'email' ? 'email' : 'whatsapp_number', id)
+      .eq(type === 'email' ? 'email' : 'phone_e164', normalizedId)
       .single();
 
     if (error || !data) {
@@ -31,6 +47,7 @@ export default function Login() {
     setLoading(true);
 
     try {
+      const normalizedIdentifier = method === 'phone' ? normalizeToE164(identifier, country) : identifier;
       // 1. Validate if client exists
       const exists = await validateClient(identifier, method);
       if (!exists) {
@@ -44,7 +61,7 @@ export default function Login() {
       // 2. Send OTP
       const { error } = await supabase.auth.signInWithOtp(
         method === 'phone' 
-          ? { phone: identifier, options: { shouldCreateUser: true } }
+          ? { phone: normalizedIdentifier, options: { shouldCreateUser: true } }
           : { email: identifier, options: { shouldCreateUser: true } }
       );
 
@@ -68,9 +85,11 @@ export default function Login() {
     setLoading(true);
 
     try {
+      const normalizedIdentifier = method === 'phone' ? normalizeToE164(identifier, country) : identifier;
+      
       const { error } = await supabase.auth.verifyOtp(
         method === 'phone'
-          ? { phone: identifier, token: otp, type: 'sms' }
+          ? { phone: normalizedIdentifier, token: otp, type: 'sms' }
           : { email: identifier, token: otp, type: 'magiclink' }
       );
 
@@ -138,17 +157,32 @@ export default function Login() {
                       {method === 'email' ? 'Endereço de Email' : 'Número de WhatsApp'}
                     </label>
                     <div className="relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
-                        {method === 'email' ? <Mail className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
-                      </div>
-                      <input 
-                        type={method === 'email' ? 'email' : 'tel'}
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        placeholder={method === 'email' ? 'exemplo@email.com' : '+351 912 345 678'}
-                        className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-sm"
-                        required
-                      />
+                      {method === 'email' ? (
+                        <>
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 z-10">
+                            <Mail className="w-5 h-5" />
+                          </div>
+                          <input 
+                            type="email"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            placeholder="exemplo@email.com"
+                            className="w-full pl-12 pr-4 py-3.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-sm"
+                            required
+                          />
+                        </>
+                      ) : (
+                        <div className="phone-input-container">
+                          <PhoneInput
+                            international
+                            defaultCountry={country}
+                            value={identifier}
+                            onChange={(val) => setIdentifier(val || '')}
+                            onCountryChange={setCountry}
+                            className="w-full bg-zinc-50 border border-zinc-200 rounded-xl focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 outline-none transition-all text-sm overflow-hidden"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 

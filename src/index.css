@@ -1,4 +1,30 @@
 @import "tailwindcss";
+@import "react-phone-number-input/style.css";
+
+/* Custom PhoneInput Styles */
+.phone-input-container .PhoneInput {
+  @apply flex items-center px-4 py-3.5;
+}
+
+.phone-input-container .PhoneInputInput {
+  @apply bg-transparent border-none outline-none text-sm w-full ml-2;
+}
+
+.phone-input-container .PhoneInputCountry {
+  @apply flex items-center gap-1 mr-2;
+}
+
+.phone-input-container .PhoneInputCountrySelect {
+  @apply absolute opacity-0 w-full h-full cursor-pointer;
+}
+
+.phone-input-container .PhoneInputCountryIcon {
+  @apply w-6 h-auto rounded-sm shadow-sm;
+}
+
+.phone-input-container .PhoneInputCountrySelectArrow {
+  @apply text-zinc-400 w-2 h-2 ml-1 opacity-50;
+}
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
