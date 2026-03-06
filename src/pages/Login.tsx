@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Phone, ArrowRight, Loader2, Smartphone, Key, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'sonner';
 import PhoneInput from 'react-phone-number-input';
 import { normalizeToE164 } from '../lib/phone';
@@ -16,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<any>('PT');
   const navigate = useNavigate();
+  const { checkSession } = useAuth();
 
   useEffect(() => {
     // Try to detect country from browser locale
@@ -48,28 +50,34 @@ export default function Login() {
 
     try {
       const normalizedIdentifier = method === 'phone' ? normalizeToE164(identifier, country) : identifier;
-      // 1. Validate if client exists
-      const exists = await validateClient(identifier, method);
-      if (!exists) {
-        toast.error('Número não encontrado', {
-          description: 'Este número não está associado a nenhum cliente TrataTudo.'
+      
+      if (method === 'email') {
+        // Use Supabase for Email
+        const { error } = await supabase.auth.signInWithOtp({
+          email: identifier,
+          options: { shouldCreateUser: true }
         });
-        setLoading(false);
-        return;
+        if (error) throw error;
+        toast.success('Enviámos um código de acesso', {
+          description: 'Verifica o teu email.'
+        });
+      } else {
+        // Use Custom API for WhatsApp
+        const response = await fetch('/api/auth/request-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_e164: normalizedIdentifier }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao enviar código');
+        
+        toast.success('Código enviado com sucesso', {
+          description: 'Verifica o teu WhatsApp.'
+        });
       }
 
-      // 2. Send OTP
-      const { error } = await supabase.auth.signInWithOtp(
-        method === 'phone' 
-          ? { phone: normalizedIdentifier, options: { shouldCreateUser: true } }
-          : { email: identifier, options: { shouldCreateUser: true } }
-      );
-
-      if (error) throw error;
-
-      toast.success('Enviámos um código de acesso', {
-        description: `Verifica o teu ${method === 'email' ? 'email' : 'WhatsApp/SMS'}.`
-      });
       setStep('otp');
     } catch (error: any) {
       toast.error('Erro ao enviar código', {
@@ -87,19 +95,35 @@ export default function Login() {
     try {
       const normalizedIdentifier = method === 'phone' ? normalizeToE164(identifier, country) : identifier;
       
-      const { error } = await supabase.auth.verifyOtp(
-        method === 'phone'
-          ? { phone: normalizedIdentifier, token: otp, type: 'sms' }
-          : { email: identifier, token: otp, type: 'magiclink' }
-      );
-
-      if (error) throw error;
+      if (method === 'email') {
+        // Use Supabase for Email
+        const { error } = await supabase.auth.verifyOtp({
+          email: identifier,
+          token: otp,
+          type: 'magiclink'
+        });
+        if (error) throw error;
+      } else {
+        // Use Custom API for WhatsApp
+        const response = await fetch('/api/auth/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone_e164: normalizedIdentifier, code: otp }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Código inválido ou expirado');
+        
+        // Crucial: Wait for session to be recognized by AuthProvider
+        await checkSession();
+      }
 
       toast.success('Sessão iniciada com sucesso');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error('Código inválido', {
-        description: 'O código introduzido está incorreto ou expirou.'
+      toast.error('Erro ao validar acesso', {
+        description: error.message
       });
     } finally {
       setLoading(false);
