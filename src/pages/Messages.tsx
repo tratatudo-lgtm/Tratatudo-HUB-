@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { WAMessage } from '../lib/supabase';
 import { formatDate, cn } from '../lib/utils';
-import { Smartphone, Search, Filter, MoreVertical, CheckCheck } from 'lucide-react';
+import { Smartphone, Search, Filter, MoreVertical, CheckCheck, X } from 'lucide-react';
 
 const mockMessages: WAMessage[] = [
   {
@@ -36,26 +36,41 @@ const mockMessages: WAMessage[] = [
 
 export default function Messages() {
   const [messages] = useState<WAMessage[]>(mockMessages);
+  const [showChatList, setShowChatList] = useState(false);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] m-4 bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
-      <div className="flex h-full">
+    <div className="flex flex-col h-[calc(100vh-2rem)] lg:h-[calc(100vh-2rem)] m-2 md:m-4 bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="flex h-full relative">
         {/* Sidebar de Chats */}
-        <div className="w-80 border-r border-zinc-100 flex flex-col bg-zinc-50/30">
+        <div className={cn(
+          "absolute inset-y-0 left-0 z-20 w-full sm:w-80 border-r border-zinc-100 flex flex-col bg-white transition-transform duration-300 lg:relative lg:translate-x-0",
+          showChatList ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}>
+          <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+            <h1 className="text-xl font-bold text-zinc-900">Mensagens</h1>
+            <button 
+              onClick={() => setShowChatList(false)}
+              className="lg:hidden p-2 text-zinc-400 hover:text-zinc-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
           <div className="p-4 border-b border-zinc-100">
-            <h1 className="text-xl font-bold text-zinc-900 mb-4">Mensagens</h1>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input 
                 type="text" 
                 placeholder="Procurar conversas..."
-                className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 outline-none transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 outline-none transition-all"
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="p-2">
-              <div className="flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-xl shadow-sm cursor-pointer">
+              <div 
+                onClick={() => setShowChatList(false)}
+                className="flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-xl shadow-sm cursor-pointer"
+              >
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Smartphone className="w-6 h-6 text-emerald-600" />
                 </div>
@@ -72,22 +87,28 @@ export default function Messages() {
         </div>
 
         {/* Área de Chat */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 flex flex-col bg-white min-w-0">
           <header className="p-4 border-b border-zinc-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+              <button 
+                onClick={() => setShowChatList(true)}
+                className="lg:hidden p-2 -ml-2 text-zinc-400 hover:text-zinc-900"
+              >
+                <Smartphone className="w-5 h-5" />
+              </button>
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <Smartphone className="w-5 h-5 text-emerald-600" />
               </div>
-              <div>
-                <h2 className="text-sm font-bold text-zinc-900">WhatsApp Bot</h2>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-zinc-900 truncate">WhatsApp Bot</h2>
                 <p className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                   Ativo agora
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-zinc-100 rounded-lg transition-colors">
+            <div className="flex items-center gap-1">
+              <button className="p-2 hover:bg-zinc-100 rounded-lg transition-colors hidden sm:block">
                 <Filter className="w-4 h-4 text-zinc-500" />
               </button>
               <button className="p-2 hover:bg-zinc-100 rounded-lg transition-colors">
@@ -96,7 +117,7 @@ export default function Messages() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-zinc-50/30">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-zinc-50/30">
             <div className="flex justify-center mb-8">
               <span className="px-3 py-1 bg-white border border-zinc-200 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                 Ontem
@@ -107,7 +128,7 @@ export default function Messages() {
               <div 
                 key={msg.id} 
                 className={cn(
-                  "flex flex-col max-w-[70%]",
+                  "flex flex-col max-w-[85%] sm:max-w-[70%]",
                   msg.direction === 'outbound' ? "ml-auto items-end" : "items-start"
                 )}
               >
@@ -132,8 +153,8 @@ export default function Messages() {
           </div>
 
           <footer className="p-4 border-t border-zinc-100">
-            <div className="max-w-3xl mx-auto flex items-center gap-3">
-              <div className="flex-1 p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm text-zinc-400 italic">
+            <div className="max-w-3xl mx-auto">
+              <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[10px] md:text-sm text-zinc-400 italic text-center">
                 O histórico de mensagens é apenas para consulta. Utilize o WhatsApp para novas comunicações.
               </div>
             </div>

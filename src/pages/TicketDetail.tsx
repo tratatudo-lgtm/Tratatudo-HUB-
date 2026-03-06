@@ -43,59 +43,59 @@ export default function TicketDetail() {
   const StatusIcon = status.icon;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 mb-8 transition-colors"
+        className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 mb-6 md:mb-8 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar aos pedidos
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="lg:col-span-2 space-y-6 md:space-y-8">
           <header>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Pedido #{ticket.tracking_code}</span>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pedido #{ticket.tracking_code}</span>
               <span className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider",
                 status.color
               )}>
                 <StatusIcon className="w-3 h-3" />
                 {status.label}
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">{ticket.category}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">{ticket.category}</h1>
           </header>
 
-          <section className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <section className="bg-white border border-zinc-200 rounded-2xl p-5 md:p-6 shadow-sm">
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Info className="w-4 h-4 text-zinc-400" />
               Descrição Detalhada
             </h2>
-            <p className="text-zinc-600 leading-relaxed">
+            <p className="text-sm md:text-base text-zinc-600 leading-relaxed">
               {ticket.description}
             </p>
           </section>
 
-          <section className="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <section className="bg-white border border-zinc-200 rounded-2xl p-5 md:p-6 shadow-sm">
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-4 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-zinc-400" />
               Localização
             </h2>
-            <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-              <div className="p-2 bg-white rounded-lg border border-zinc-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+              <div className="p-2 bg-white rounded-lg border border-zinc-200 shadow-sm flex-shrink-0">
                 <MapPin className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-zinc-900">{ticket.location}</p>
-                <p className="text-xs text-zinc-500 mt-1">Coordenadas: 38.7223° N, 9.1393° W</p>
+                <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-wider font-bold">Coordenadas: 38.7223° N, 9.1393° W</p>
               </div>
             </div>
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-xs font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <History className="w-4 h-4 text-zinc-400" />
               Histórico do Processo
             </h2>
@@ -106,7 +106,7 @@ export default function TicketDetail() {
                     <div className="w-2 h-2 bg-zinc-400 rounded-full" />
                   </div>
                   <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
                       <span className="text-xs font-bold text-zinc-900">Estado: {statusMap[item.status as keyof typeof statusMap].label}</span>
                       <span className="text-[10px] text-zinc-400 font-medium">{formatDate(item.date)}</span>
                     </div>
@@ -119,8 +119,8 @@ export default function TicketDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-zinc-900 mb-4">Detalhes Rápidos</h3>
+          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 md:p-6">
+            <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-4">Detalhes Rápidos</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-2 border-b border-zinc-200/50">
                 <span className="text-xs text-zinc-500">Tipo</span>

@@ -56,13 +56,13 @@ export default function Dashboard() {
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Dashboard</h1>
-        <p className="text-zinc-500 mt-1">Bem-vindo de volta. Aqui está o resumo da sua atividade.</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">Dashboard</h1>
+        <p className="text-sm md:text-base text-zinc-500 mt-1">Bem-vindo de volta. Aqui está o resumo da sua atividade.</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
         <StatCard 
           label="WhatsApp Associado" 
           value="+351 912 345 678" 
@@ -89,17 +89,17 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-zinc-900">Pedidos Recentes</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-zinc-900">Pedidos Recentes</h2>
             <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">Ver todos</button>
           </div>
           <TicketTable tickets={tickets} />
         </div>
 
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-zinc-900">Resumo por Estado</h2>
-          <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm space-y-4">
+        <div className="space-y-6 order-1 lg:order-2">
+          <h2 className="text-lg md:text-xl font-semibold text-zinc-900">Resumo por Estado</h2>
+          <div className="bg-white border border-zinc-200 rounded-xl p-4 md:p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-blue-600" />
@@ -127,7 +127,7 @@ export default function Dashboard() {
             <div className="relative z-10">
               <h3 className="text-lg font-semibold mb-2">Precisa de ajuda?</h3>
               <p className="text-zinc-400 text-sm mb-4">O nosso assistente IA está disponível 24/7 para responder às suas questões.</p>
-              <button className="bg-white text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-100 transition-colors">
+              <button className="bg-white text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-100 transition-colors w-full sm:w-auto">
                 Falar com Assistente
               </button>
             </div>

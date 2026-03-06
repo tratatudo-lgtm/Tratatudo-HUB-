@@ -65,18 +65,18 @@ export default function Tickets() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Pedidos e Reclamações</h1>
-          <p className="text-zinc-500 mt-1">Gira e acompanhe todos os seus processos ativos e históricos.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight">Pedidos e Reclamações</h1>
+          <p className="text-sm md:text-base text-zinc-500 mt-1">Gira e acompanhe todos os seus processos ativos e históricos.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors">
             <Download className="w-4 h-4" />
-            Exportar
+            <span className="hidden sm:inline">Exportar</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
+          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors">
             <Plus className="w-4 h-4" />
             Novo Pedido
           </button>
@@ -84,7 +84,7 @@ export default function Tickets() {
       </header>
 
       <div className="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6">
-        <div className="p-4 border-b border-zinc-100 flex flex-col md:flex-row md:items-center gap-4">
+        <div className="p-4 border-b border-zinc-100 flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input 
@@ -96,11 +96,11 @@ export default function Tickets() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50">
+            <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 hover:bg-zinc-50">
               <Filter className="w-4 h-4" />
               Filtros
             </button>
-            <select className="px-3 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 bg-white outline-none focus:ring-2 focus:ring-zinc-900">
+            <select className="flex-1 lg:flex-none px-3 py-2 border border-zinc-200 rounded-lg text-sm font-medium text-zinc-600 bg-white outline-none focus:ring-2 focus:ring-zinc-900">
               <option>Todos os Estados</option>
               <option>Aberto</option>
               <option>Em Progresso</option>
@@ -111,11 +111,11 @@ export default function Tickets() {
         <TicketTable tickets={filteredTickets} />
       </div>
       
-      <div className="flex items-center justify-between text-sm text-zinc-500">
-        <p>A mostrar {filteredTickets.length} de {tickets.length} pedidos</p>
-        <div className="flex items-center gap-2">
-          <button className="px-3 py-1 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-50" disabled>Anterior</button>
-          <button className="px-3 py-1 border border-zinc-200 rounded-md hover:bg-zinc-50">Próximo</button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+        <p className="text-center sm:text-left">A mostrar {filteredTickets.length} de {tickets.length} pedidos</p>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button className="flex-1 sm:flex-none px-3 py-1.5 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-50" disabled>Anterior</button>
+          <button className="flex-1 sm:flex-none px-3 py-1.5 border border-zinc-200 rounded-md hover:bg-zinc-50">Próximo</button>
         </div>
       </div>
     </div>
