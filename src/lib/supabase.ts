@@ -65,3 +65,14 @@ export type MagicLink = {
   used_at: string | null;
   created_at: string;
 };
+
+export type ClientInstance = {
+  id: string;
+  client_id: number;
+  name: string;
+  phone: string;
+  status: 'connected' | 'disconnected' | 'connecting';
+  type: string;
+  last_activity: string;
+  created_at: string;
+};

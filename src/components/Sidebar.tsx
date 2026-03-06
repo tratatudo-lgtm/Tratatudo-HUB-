@@ -8,7 +8,8 @@ import {
   LogOut,
   Settings,
   User,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
@@ -17,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Ticket, label: 'Pedidos', href: '/pedidos' },
+  { icon: Smartphone, label: 'A Minha Instância', href: '/instancia' },
   { icon: MessageSquare, label: 'Mensagens', href: '/mensagens' },
   { icon: Bot, label: 'Assistente IA', href: '/assistente' },
 ];

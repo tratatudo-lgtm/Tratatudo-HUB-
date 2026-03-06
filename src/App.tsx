@@ -13,6 +13,7 @@ import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import Messages from './pages/Messages';
 import Assistant from './pages/Assistant';
+import MyInstance from './pages/MyInstance';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, client, loading, signOut } = useAuth();
@@ -201,6 +202,7 @@ export default function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/pedidos" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
             <Route path="/pedidos/:code" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
+            <Route path="/instancia" element={<ProtectedRoute><MyInstance /></ProtectedRoute>} />
             <Route path="/mensagens" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/assistente" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
