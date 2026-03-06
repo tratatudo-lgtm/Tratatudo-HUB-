@@ -1,0 +1,5 @@
+{
+  "name": "Hub do Cliente TrataTudo",
+  "description": "Portal privado para clientes TrataTudo acompanharem pedidos, mensagens e interagirem com um assistente IA.",
+  "requestFramePermissions": []
+}
